@@ -1,6 +1,7 @@
 #ifndef _GL_THREADS_
 #define _GL_THREADS_
 
+#include <stdlib.h>
 #include <stdbool.h>
 
 typedef struct glthread_node {
