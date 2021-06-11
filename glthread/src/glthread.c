@@ -37,4 +37,3 @@ void glthread_delete(glthread_t *list) {
 bool is_glthread_empty(glthread_t *list) {
     return ((list->head->next == NULL && list->head->prev == NULL) ? true:false);
 }
-
