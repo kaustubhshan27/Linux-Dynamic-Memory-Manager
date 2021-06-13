@@ -29,8 +29,7 @@ bool is_glthread_empty(glthread_t *list);
 
 #define ITERATE_GLTHREAD_BEGIN(list_ptr, node)                                          \
 {                                                                                       \
-    glthread_node_t *next = NULL;                                                       \
-    node = NULL;                                                                        \ 
+    glthread_node_t *next = NULL;                                                       \ 
     for(node = list_ptr->head; node != NULL; node = next) {                             \
         next = node->next;                                                              \
          
