@@ -27,12 +27,12 @@ bool is_glthread_empty(glthread_t *list);
 #define BASEOF(glthread_node, struct_type, field_name)   \
     (struct_type *)(glthread_node - (OFFSETOF(struct_type, field_name)))
 
-#define ITERATE_GLTHREAD_BEGIN(list_ptr, struct_type, field_name, base_ptr)             \
+#define ITERATE_GLTHREAD_BEGIN(list_ptr, node)                                          \
 {                                                                                       \
-    glthread_node_t *glthread_node = NULL, *next = NULL;                                \
-    for(glthread_node = list_ptr->head; glthread_node != NULL; glthread_node = next) {  \
-        next = glthread_node->next;                                                     \
-        base_ptr = BASEOF(glthread_node, struct_type, field_name);
+    glthread_node_t *next = NULL;                                                       \
+    node = NULL;                                                                        \ 
+    for(node = list_ptr->head; node != NULL; node = next) {                             \
+        next = node->next;                                                              \
          
 #define ITERATE_GLTHREAD_END    }}
 
