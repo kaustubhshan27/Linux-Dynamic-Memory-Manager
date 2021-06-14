@@ -34,6 +34,6 @@ int main() {
     printf("VM page size = %lu\n", SYSTEM_PAGE_SIZE);
     void *addr1 = request_vm_page(1);
     void *addr2 = request_vm_page(1);
-    //printf("addr1 = %p --- addr2 = %p\n", addr1, addr2);
+    printf("addr1 = %p --- addr2 = %p\n", addr1, addr2);
     return 0;
 }
