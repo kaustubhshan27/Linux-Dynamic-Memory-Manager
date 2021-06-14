@@ -1,5 +1,5 @@
-#ifndef _GL_THREADS_
-#define _GL_THREADS_
+#ifndef _GL_THREAD_
+#define _GL_THREAD_
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -35,4 +35,4 @@ bool is_glthread_empty(glthread_t *list);
          
 #define ITERATE_GLTHREAD_END    }}
 
-#endif /* _GL_THREADS_ */
+#endif /* _GL_THREAD_ */
