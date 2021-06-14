@@ -13,7 +13,7 @@ void mm_init() {
 
 /* To request VM page from the kernel */
 static void *request_vm_page(uint32_t units) {
-    char *vm_page = mmap(0, units*SYSTEM_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE, 0, 0);
+    char *vm_page = mmap(0, units*SYSTEM_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANON|MAP_PRIVATE, 0, 0);
     if(vm_page == MAP_FAILED){
         printf("Error : VM page allocation failed\n");
         return NULL;
