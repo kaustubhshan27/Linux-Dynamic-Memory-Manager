@@ -1,5 +1,9 @@
 #include "../inc/glthread.h"
 
+static bool _is_glthread_empty(glthread_t *list) {
+    return ((list->head->next == NULL && list->head->prev == NULL) ? true:false);
+}
+
 static void _glthread_add_next(glthread_node_t *current_node, glthread_node_t *new_node) {
     new_node->next = current_node;
     current_node->prev = new_node;
@@ -43,11 +47,10 @@ void glthread_init_node(glthread_node_t *glthread_node) {
 
 void glthread_add_node(glthread_t *list, glthread_node_t *node) {
     glthread_init_node(node);
-    if(is_glthread_empty(list)) {
+    if(_is_glthread_empty(list)) {
         list->head = node;
     } else {
-        glthread_node_t *head = list->head;
-        _glthread_add_next(head, node);
+        _glthread_add_next(list->head, node);
         list->head = node;
     }
 }
@@ -64,8 +67,4 @@ void glthread_delete(glthread_t *list) {
     ITERATE_GLTHREAD_BEGIN(list, node) {
         glthread_remove_node(list, node);
     } ITERATE_GLTHREAD_END
-}
-
-bool is_glthread_empty(glthread_t *list) {
-    return ((list->head->next == NULL && list->head->prev == NULL) ? true:false);
 }

@@ -19,7 +19,6 @@ void glthread_init_node(glthread_node_t *glthread_node);
 void glthread_add_node(glthread_t *list, glthread_node_t *node);
 void glthread_remove_node(glthread_t *list, glthread_node_t *node);
 void glthread_delete(glthread_t *list);
-bool is_glthread_empty(glthread_t *list);
 
 #define OFFSETOF(struct_type, field_name)   \
     (unsigned int)(&((struct_type *)NULL)->field_name)
