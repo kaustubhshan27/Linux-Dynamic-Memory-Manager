@@ -17,12 +17,16 @@ typedef struct glthread {
 
 /* initializes a glthread */
 void glthread_init(glthread_t *list, uint32_t offset);
+
 /* initializes a glthread node */
 void glthread_init_node(glthread_node_t *glthread_node);
+
 /* adds a node to a glthread */
 void glthread_add_node(glthread_t *list, glthread_node_t *node);
+
 /* removes a node from a glthread */
 void glthread_remove_node(glthread_t *list, glthread_node_t *node);
+
 /* deletes the entire glthread */
 void glthread_delete(glthread_t *list);
 
