@@ -23,6 +23,20 @@ static int8_t _release_vm_page(void *vm_page, uint32_t units) {
     return munmap(vm_page, units * SYSTEM_PAGE_SIZE);
 }
 
+/* to lookup a particular struct name in all VM page records */
+static struct_record_t *lookup_struct_record_by_name(char *struct_name) {
+    for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
+        struct_record_t *record = NULL;
+        ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+            if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0) {
+                return record;
+            }
+        } ITERATE_STRUCT_RECORDS_END
+    }
+
+    return NULL;
+}
+
 void mm_init(void) {
     SYSTEM_PAGE_SIZE = sysconf(_SC_PAGESIZE);
 }
@@ -41,16 +55,19 @@ int8_t mm_register_struct_record(char *struct_name, size_t size) {
         } else {
             uint32_t count = 0;
             struct_record_t *record = NULL;
-            /* TODO: iterate over all VM pages not just the first */
-            /* iterating through records in an existing VM page to insert a record at the end */
-            ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record_head->struct_record_list, record) {
-                if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0) {
-                    /* struct name already exists in the record list */
-                    return -2;
-                } else {
-                    count++;
-                }
-            } ITERATE_STRUCT_RECORDS_END
+            /* iterating through records in all existing VM pages to insert a record at the end */
+            for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
+                count = 0;
+                record = NULL;
+                ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+                    if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0) {
+                        /* struct name already exists in the record list */
+                        return -2;
+                    } else {
+                        count++;
+                    }
+                } ITERATE_STRUCT_RECORDS_END
+            }
 
             if(count == MAX_RECORDS_PER_VM_PAGE) {
                 /* the previous VM page is full, create a new VM page to add this record */
@@ -65,5 +82,14 @@ int8_t mm_register_struct_record(char *struct_name, size_t size) {
             record->size = size;
         }
         return 0;
+    }
+}
+
+void mm_print_registered_struct_records(void) {
+    for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
+        struct_record_t *record = NULL;
+        ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+            printf("%s: %d\n", record->struct_name, record->size);
+        } ITERATE_STRUCT_RECORDS_END
     }
 }

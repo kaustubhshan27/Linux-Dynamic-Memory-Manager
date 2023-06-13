@@ -1,6 +1,7 @@
 #ifndef _MEM_MANG_
 #define _MEM_MANG_
 
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>     /* for sysconf(_SC_PAGESIZE) */
