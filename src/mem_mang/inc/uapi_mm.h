@@ -8,7 +8,7 @@
 void mm_init(void);
 
 /* to add a struct record <struct name, struct size> to a list in a VM page */
-int8_t mm_register_struct_record(char *struct_name, size_t size);
+int8_t mm_register_struct_record(const char *struct_name, size_t size);
 
 /* prints the name of the structs currently registered by the memory manager */
 void mm_print_registered_struct_records(void);

@@ -1,4 +1,4 @@
-#include "../inc/mm.h"
+#include "mm.h"
 
 /* size of a VM page on this system */
 static size_t SYSTEM_PAGE_SIZE = 0;
@@ -41,7 +41,7 @@ void mm_init(void) {
     SYSTEM_PAGE_SIZE = sysconf(_SC_PAGESIZE);
 }
 
-int8_t mm_register_struct_record(char *struct_name, size_t size) {
+int8_t mm_register_struct_record(const char *struct_name, size_t size) {
     /* we cannot accomodate a struct whose size is greater than the page size */
     if(size > SYSTEM_PAGE_SIZE) {
         return -1;

@@ -1,4 +1,4 @@
-#include "../mem_mang/inc/uapi_mm.h"
+#include "uapi_mm.h"
 
 typedef struct emp {
     char name[32];

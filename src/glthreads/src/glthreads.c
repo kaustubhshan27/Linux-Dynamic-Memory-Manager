@@ -1,4 +1,4 @@
-#include "../inc/glthread.h"
+#include "glthreads.h"
 
 static bool _is_glthread_empty(glthread_t *list) {
     return ((list->head->next == NULL && list->head->prev == NULL) ? true:false);

@@ -1,7 +1,7 @@
-MODULE_NAME = mem_mang
+MODULE_NAME = glthreads
 
 SRC = ./src
-PROJ_ROOT_DIR = ..
+PROJ_ROOT_DIR = ../..
 OBJ_DIR = $(PROJ_ROOT_DIR)/objs/$(MODULE_NAME)
 
 INSTALLATION_PATH = $(shell echo $$INSTALLATION_PATH)
@@ -17,6 +17,9 @@ CXX = $(shell echo $$CXX)
 ifeq ($(CXX),)
 CXX = gcc
 endif
+
+# linker
+LDXX = ar rcs
 
 STDFLAG = -std=gnu99
 
@@ -34,7 +37,7 @@ CCFLAGS = $(STDFLAG) $(WARN) $(INC)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar rcs $@ $^
+	$(LDXX) $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC)/%.c
 	$(CXX) $(CCFLAGS) -o $@ -c $<
