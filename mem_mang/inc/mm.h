@@ -24,7 +24,7 @@ typedef struct vm_page_for_struct_records {
 #define ITERATE_STRUCT_RECORDS_BEGIN(record_list_ptr, record)                                   \
 {                                                                                               \
     uint32_t limit = 0;                                                                         \
-    for(record = (struct_record_t *)record_list_ptr;                                            \ 
+    for(record = (struct_record_t *)record_list_ptr;                                            \
         limit < MAX_RECORDS_PER_VM_PAGE && record->size;                                        \
         record++, limit++) {
          
