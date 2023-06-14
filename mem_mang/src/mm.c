@@ -89,7 +89,7 @@ void mm_print_registered_struct_records(void) {
     for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
         struct_record_t *record = NULL;
         ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
-            printf("%s: %d\n", record->struct_name, record->size);
+            printf("%s: %ld\n", record->struct_name, record->size);
         } ITERATE_STRUCT_RECORDS_END
     }
 }
