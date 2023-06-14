@@ -30,11 +30,11 @@ void glthread_remove_node(glthread_t *list, glthread_node_t *node);
 /* deletes the entire glthread */
 void glthread_delete(glthread_t *list);
 
-#define OFFSETOF(struct_type, field_name)   \
-    (uint32_t)(&((struct_type *)NULL)->field_name)
+#define GLTHREAD_OFFSETOF(struct_type, field_name)      \
+    (size_t)(&((struct_type *)NULL)->field_name)
 
-#define BASEOF(glthread_node, struct_type, field_name)   \
-    (struct_type *)((uint8_t *)glthread_node - (OFFSETOF(struct_type, field_name)))
+#define GLTHREAD_BASEOF(glthread_node, struct_type, field_name)     \
+    (struct_type *)((uint8_t *)glthread_node - (GLTHREAD_OFFSETOF(struct_type, field_name)))
 
 #define ITERATE_GLTHREAD_BEGIN(list_ptr, node)                                                   \
 {                                                                                                \
