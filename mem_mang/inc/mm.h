@@ -30,4 +30,32 @@ typedef struct vm_page_for_struct_records {
          
 #define ITERATE_STRUCT_RECORDS_END    }}
 
+typedef enum {
+    FREE, 
+    ALLOCATED
+} data_block_state_t;
+
+typedef struct meta_block {
+    data_block_state_t is_free;
+    uint32_t data_block_size;
+    struct meta_block *prev;
+    struct meta_block *next;
+    uint32_t offset;
+} meta_block_t;
+
+#define BLOCK_OFFSETOF(struct_type, field_name)     \
+    (size_t)(&((struct_type *)NULL)->field_name)
+
+#define GET_PAGE_FROM_META_BLOCK(meta_block_ptr)    \
+    (void *)((uint8_t *)meta_block_ptr - ((meta_block_t *)meta_block_ptr)->offset)
+
+#define NEXT_META_BLOCK(meta_block_ptr)             \
+    (meta_block_t *)(((meta_block_t *)meta_block_ptr)->next)
+
+#define NEXT_META_BLOCK_BY_SIZE(meta_block_ptr)     \
+    (meta_block_t *)((uint8_t *)meta_block_ptr + sizeof(meta_block_t) + ((meta_block_t *)meta_block_ptr)->size)
+
+#define PREV_META_BLOCK(meta_block_ptr)             \
+    (meta_block_t *)(((meta_block_t *)meta_block_ptr)->prev)
+
 #endif /* _MEM_MANG_ */
