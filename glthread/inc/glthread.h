@@ -38,7 +38,7 @@ void glthread_delete(glthread_t *list);
 
 #define ITERATE_GLTHREAD_BEGIN(list_ptr, node)                                                   \
 {                                                                                                \
-    glthread_node_t *_glthread_ptr = NULL;                                                       \ 
+    glthread_node_t *_glthread_ptr = NULL;                                                       \
     for(node = list_ptr->head; node != NULL; node = _glthread_ptr) {                             \
         _glthread_ptr = node->next;                                                              \
          
