@@ -18,7 +18,8 @@ typedef struct struct_record {
 
 typedef struct vm_page_for_struct_records {
     struct vm_page_for_struct_records *next;
-    struct_record_t *struct_record_list;
+    /* to point to the list of structs in the VM page - struct hack VLA used */
+    struct_record_t struct_record_list[];
 } vm_page_for_struct_records_t;
 
 #define ITERATE_STRUCT_RECORDS_BEGIN(record_list_ptr, record)                                   \

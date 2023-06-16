@@ -50,8 +50,8 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size) {
         if(!vm_page_record_head) {
             vm_page_record_head = (vm_page_for_struct_records_t *)_request_vm_page(1);
             vm_page_record_head->next = NULL;
-            strncpy(vm_page_record_head->struct_record_list->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE);
-            vm_page_record_head->struct_record_list->size = size;
+            strncpy(vm_page_record_head->struct_record_list[0].struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE);
+            vm_page_record_head->struct_record_list[0].size = size;
         } else {
             uint32_t count = 0;
             struct_record_t *record = NULL;
