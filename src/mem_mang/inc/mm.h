@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 #include <unistd.h>     /* for sysconf(_SC_PAGESIZE) */
 #include <sys/mman.h>   /* for mmap() and munmap() */
 
@@ -32,8 +33,8 @@ typedef struct vm_page_for_struct_records {
 #define MM_ITERATE_STRUCT_RECORDS_END    }}
 
 typedef enum {
-    FREE, 
-    ALLOCATED
+    MM_FREE, 
+    MM_ALLOCATED
 } data_block_state_t;
 
 typedef struct meta_block {

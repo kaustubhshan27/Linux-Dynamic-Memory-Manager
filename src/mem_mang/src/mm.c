@@ -7,7 +7,7 @@ static size_t SYSTEM_PAGE_SIZE = 0;
 static vm_page_for_struct_records_t *vm_page_record_head = NULL;
 
 /* to request VM page from the kernel */
-static void *_request_vm_page(uint32_t units) {
+static void *_mm_request_vm_page(uint32_t units) {
     /* the virtual mapping should be done in the heap */
     uint8_t *vm_page = mmap(sbrk(0), units * SYSTEM_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
     if(vm_page == MAP_FAILED){
@@ -19,12 +19,12 @@ static void *_request_vm_page(uint32_t units) {
 }
 
 /* to release VM page to the kernel */
-static int8_t _release_vm_page(void *vm_page, uint32_t units) {
+static int8_t _mm_release_vm_page(void *vm_page, uint32_t units) {
     return munmap(vm_page, units * SYSTEM_PAGE_SIZE);
 }
 
 /* to lookup a particular struct name in all VM page records */
-static struct_record_t *lookup_struct_record_by_name(char *struct_name) {
+static struct_record_t *_mm_lookup_struct_record_by_name(char *struct_name) {
     for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
         struct_record_t *record = NULL;
         MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
@@ -35,6 +35,16 @@ static struct_record_t *lookup_struct_record_by_name(char *struct_name) {
     }
 
     return NULL;
+}
+
+static void _mm_merge_free_blocks(meta_block_t *first, meta_block_t *second) {
+    assert(first->is_free == MM_FREE && second->is_free == MM_FREE);
+
+    first->data_block_size += sizeof(meta_block_t) + second->data_block_size;
+    first->next = second->next;
+    if(!second->next) {
+        first->next->prev = first;
+    }
 }
 
 void mm_init(void) {
@@ -48,7 +58,7 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size) {
     } else {
         /* allocating a VM page for the first time */
         if(!vm_page_record_head) {
-            vm_page_record_head = (vm_page_for_struct_records_t *)_request_vm_page(1);
+            vm_page_record_head = (vm_page_for_struct_records_t *)_mm_request_vm_page(1);
             vm_page_record_head->next = NULL;
             strncpy(vm_page_record_head->struct_record_list[0].struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE);
             vm_page_record_head->struct_record_list[0].size = size;
@@ -71,7 +81,7 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size) {
 
             if(count == MAX_RECORDS_PER_VM_PAGE) {
                 /* the previous VM page is full, create a new VM page to add this record */
-                vm_page_for_struct_records_t *new_vm_page_record = (vm_page_for_struct_records_t *)_request_vm_page(1);
+                vm_page_for_struct_records_t *new_vm_page_record = (vm_page_for_struct_records_t *)_mm_request_vm_page(1);
                 new_vm_page_record->next = vm_page_record_head;
                 /* the record to be added will be the first record in the new VM page*/
                 record = new_vm_page_record->struct_record_list;
