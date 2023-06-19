@@ -36,12 +36,12 @@ void glthread_delete(glthread_t *list);
 #define GLTHREAD_BASEOF(glthread_node, struct_type, field_name)     \
     (struct_type *)((uint8_t *)glthread_node - (GLTHREAD_OFFSETOF(struct_type, field_name)))
 
-#define ITERATE_GLTHREAD_BEGIN(list_ptr, node)                                                   \
+#define GLTHREAD_ITERATE_BEGIN(list_ptr, node)                                                   \
 {                                                                                                \
     glthread_node_t *_glthread_ptr = NULL;                                                       \
     for(node = list_ptr->head; node != NULL; node = _glthread_ptr) {                             \
         _glthread_ptr = node->next;                                                              \
          
-#define ITERATE_GLTHREAD_END    }}
+#define GLTHREAD_ITERATE_END    }}
 
 #endif /* _GL_THREAD_ */

@@ -53,7 +53,7 @@ void glthread_remove_node(glthread_t *list, glthread_node_t *node) {
 
 void glthread_delete(glthread_t *list) {
     glthread_node_t *node = NULL;
-    ITERATE_GLTHREAD_BEGIN(list, node) {
+    GLTHREAD_ITERATE_BEGIN(list, node) {
         glthread_remove_node(list, node);
-    } ITERATE_GLTHREAD_END
+    } GLTHREAD_ITERATE_END
 }
