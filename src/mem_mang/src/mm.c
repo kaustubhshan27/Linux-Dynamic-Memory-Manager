@@ -27,11 +27,11 @@ static int8_t _release_vm_page(void *vm_page, uint32_t units) {
 static struct_record_t *lookup_struct_record_by_name(char *struct_name) {
     for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
         struct_record_t *record = NULL;
-        ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+        MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
             if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0) {
                 return record;
             }
-        } ITERATE_STRUCT_RECORDS_END
+        } MM_ITERATE_STRUCT_RECORDS_END;
     }
 
     return NULL;
@@ -59,14 +59,14 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size) {
             for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
                 count = 0;
                 record = NULL;
-                ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+                MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
                     if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0) {
                         /* struct name already exists in the record list */
                         return -2;
                     } else {
                         count++;
                     }
-                } ITERATE_STRUCT_RECORDS_END
+                } MM_ITERATE_STRUCT_RECORDS_END;
             }
 
             if(count == MAX_RECORDS_PER_VM_PAGE) {
@@ -88,8 +88,8 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size) {
 void mm_print_registered_struct_records(void) {
     for(vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL; vm_page_record = vm_page_record->next) {
         struct_record_t *record = NULL;
-        ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
+        MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record) {
             printf("%s: %ld\n", record->struct_name, record->size);
-        } ITERATE_STRUCT_RECORDS_END
+        } MM_ITERATE_STRUCT_RECORDS_END;
     }
 }
