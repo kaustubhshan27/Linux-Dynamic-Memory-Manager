@@ -81,7 +81,7 @@ static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record) {
         record->first_page = data_vm_page;
     }
 
-    return data_vm_page;;
+    return data_vm_page;
 }
 
 /* deletes and returns a data VM page */
