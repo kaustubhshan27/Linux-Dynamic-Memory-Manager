@@ -61,6 +61,7 @@ static uint32_t _mm_max_vm_page_memory_available(uint32_t units) {
     return (uint32_t)((SYSTEM_PAGE_SIZE * units) - MM_BLOCK_OFFSETOF(vm_page_for_data_t, page_memory));
 }
 
+/* allocates a data VM page and accordingly adjust the list links */
 static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record) {
     vm_page_for_data_t *data_vm_page = (vm_page_for_data_t *)_mm_request_vm_page(1);
 
@@ -83,6 +84,7 @@ static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record) {
     return data_vm_page;;
 }
 
+/* deletes and returns a data VM page */
 static void mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page) {
     struct_record_t *record = data_vm_page->record;
 
