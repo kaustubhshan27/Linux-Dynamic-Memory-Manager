@@ -1,8 +1,8 @@
 #ifndef _UAPI_MEM_MANG_
 #define _UAPI_MEM_MANG_
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* to initialize the memory manager */
 void mm_init(void);
@@ -13,7 +13,6 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size);
 /* prints the name of the structs currently registered by the memory manager */
 void mm_print_registered_struct_records(void);
 
-#define MM_REG_STRUCT(struct_name) \
-    mm_register_struct_record(#struct_name, sizeof(struct_name))
+#define MM_REG_STRUCT(struct_name) mm_register_struct_record(#struct_name, sizeof(struct_name))
 
 #endif /* UAPI_MEM_MANG_ */
