@@ -47,6 +47,62 @@ static void _mm_merge_free_blocks(meta_block_t *first, meta_block_t *second) {
     }
 }
 
+/* checks if a data VM page is totally free */
+static vm_bool_t _mm_is_data_vm_page_empty(vm_page_for_data_t *data_vm_page) {
+    if(data_vm_page->meta_block_info.next == NULL && data_vm_page->meta_block_info.prev == NULL && data_vm_page->meta_block_info.is_free == MM_FREE) {
+        return MM_FREE;
+    }
+
+    return MM_ALLOCATED;
+}
+
+/* returns the size of the free memory available in contiguous data VM pages */
+static uint32_t _mm_max_vm_page_memory_available(uint32_t units) {
+    return (uint32_t)((SYSTEM_PAGE_SIZE * units) - MM_BLOCK_OFFSETOF(vm_page_for_data_t, page_memory));
+}
+
+static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record) {
+    vm_page_for_data_t *data_vm_page = (vm_page_for_data_t *)_mm_request_vm_page(1);
+
+    MARK_DATA_VM_PAGE_FREE(data_vm_page);
+
+    data_vm_page->meta_block_info.data_block_size = _mm_max_vm_page_memory_available(1);
+    data_vm_page->meta_block_info.offset = MM_BLOCK_OFFSETOF(vm_page_for_data_t, meta_block_info);
+    data_vm_page->next = NULL;
+    data_vm_page->prev = NULL;
+    data_vm_page->record = record;
+
+    if(!record->first_page) {
+        record->first_page = data_vm_page;
+    } else {
+        data_vm_page->next = record->first_page;
+        record->first_page->prev = data_vm_page;
+        record->first_page = data_vm_page;
+    }
+
+    return data_vm_page;;
+}
+
+static void mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page) {
+    struct_record_t *record = data_vm_page->record;
+
+    if(record->first_page == data_vm_page) {
+        record->first_page = data_vm_page->next;
+        if(data_vm_page->next) {
+            data_vm_page->next->prev = NULL;
+        }
+        data_vm_page->next = NULL;
+        data_vm_page->prev = NULL;
+    } else {
+        if(data_vm_page->next) {
+            data_vm_page->next->prev = data_vm_page->prev;
+            data_vm_page->prev->next = data_vm_page->next;
+        }
+    }
+
+    _mm_release_vm_page((void *)data_vm_page, 1);
+}
+
 void mm_init(void) {
     SYSTEM_PAGE_SIZE = sysconf(_SC_PAGESIZE);
 }
