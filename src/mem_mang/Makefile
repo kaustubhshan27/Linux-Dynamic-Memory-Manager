@@ -23,7 +23,7 @@ LDXX = ar rcs
 
 STDFLAG = -std=gnu99
 
-INC = -Iinc/
+INC = -Iinc/ -I../glthreads/inc/
 
 SRCS := $(wildcard $(SRC)/*.c)
 OBJS := $(patsubst $(SRC)/%.c, $(OBJ_DIR)/%.o, $(SRCS))

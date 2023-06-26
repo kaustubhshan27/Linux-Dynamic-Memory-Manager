@@ -37,7 +37,8 @@ WARN=-Wall -Wextra -Werror -Wwrite-strings -Wno-parentheses \
      -pedantic -Warray-bounds -Wno-unused-variable -Wno-unused-function \
      -Wno-unused-parameter -Wno-unused-result
 
-DEP_LIBS = -L$(LIBRARY_DIR) -lglthreads -lmem_mang
+# link lib1 after lib2 when lib2 depends on lib1
+DEP_LIBS = -L$(LIBRARY_DIR) -lmem_mang -lglthreads
 
 CCFLAGS = $(STDFLAG) $(WARN) $(INC)
 LDFLAGS = $(DEP_LIBS) 

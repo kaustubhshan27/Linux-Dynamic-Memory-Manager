@@ -47,9 +47,10 @@ static struct_record_t *_mm_lookup_struct_record_by_name(char *struct_name)
     return NULL;
 }
 
+/* merging contiguous data blocks in a VM page */
 static void _mm_merge_free_blocks(meta_block_t *first, meta_block_t *second)
 {
-    assert(first->is_free == MM_FREE && second->is_free == MM_FREE);
+    assert((first->is_free == MM_FREE) && (second->is_free == MM_FREE));
 
     first->data_block_size += sizeof(meta_block_t) + second->data_block_size;
     first->next = second->next;
@@ -89,6 +90,7 @@ static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record)
     data_vm_page->next = NULL;
     data_vm_page->prev = NULL;
     data_vm_page->record = record;
+    glthread_init_node(&data_vm_page->meta_block_info.glue_node);
 
     if (!record->first_page)
     {
@@ -105,7 +107,7 @@ static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record)
 }
 
 /* deletes and returns a data VM page */
-static void mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page)
+static void _mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page)
 {
     struct_record_t *record = data_vm_page->record;
 
@@ -131,6 +133,31 @@ static void mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page)
     _mm_release_vm_page((void *)data_vm_page, 1);
 }
 
+static int8_t _mm_free_block_comparison(void *meta_block_A, void *meta_block_B) {
+    meta_block_t *meta_block_A_ptr = (meta_block_t *)meta_block_A;
+    meta_block_t *meta_block_B_ptr = (meta_block_t *)meta_block_B;
+    
+    assert((meta_block_A_ptr->is_free == MM_FREE) && (meta_block_B_ptr->is_free == MM_FREE));
+
+    if(meta_block_A_ptr->data_block_size > meta_block_B_ptr->data_block_size) {
+        return -1;
+    } else if(meta_block_A_ptr->data_block_size < meta_block_B_ptr->data_block_size) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static void _mm_add_free_data_block_meta_info(struct_record_t *record, meta_block_t *free_meta_block) {
+    assert(free_meta_block->is_free == MM_FREE);
+
+    glthread_priority_insert(&record->free_block_priority_list, &free_meta_block->glue_node, _mm_free_block_comparison, MM_BLOCK_OFFSETOF(meta_block_t, glue_node));
+}
+
+static meta_block_t *_mm_get_largest_free_data_block(struct_record_t *record) {
+    return (meta_block_t *)(GLTHREAD_BASEOF(record->free_block_priority_list.head, MM_BLOCK_OFFSETOF(meta_block_t, glue_node)));
+}
+
 void mm_init(void)
 {
     SYSTEM_PAGE_SIZE = sysconf(_SC_PAGESIZE);
@@ -152,6 +179,8 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size)
             vm_page_record_head->next = NULL;
             strncpy(vm_page_record_head->struct_record_list[0].struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE);
             vm_page_record_head->struct_record_list[0].size = size;
+            vm_page_record_head->struct_record_list[0].first_page = NULL;
+            glthread_init(&vm_page_record_head->struct_record_list[0].free_block_priority_list);
         }
         else
         {
@@ -193,6 +222,8 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size)
 
             strncpy(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE);
             record->size = size;
+            record->first_page = NULL;
+            glthread_init(&record->free_block_priority_list);
         }
         return 0;
     }

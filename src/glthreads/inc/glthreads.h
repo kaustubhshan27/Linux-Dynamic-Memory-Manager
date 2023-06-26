@@ -13,18 +13,17 @@ typedef struct glthread_node
 
 typedef struct glthread
 {
-    glthread_node_t *head;
-    unsigned int offset;
+    struct glthread_node *head;
 } glthread_t;
 
 /* initializes a glthread */
-void glthread_init(glthread_t *list, uint32_t offset);
+void glthread_init(glthread_t *list);
 
 /* initializes a glthread node */
 void glthread_init_node(glthread_node_t *glthread_node);
 
 /* adds a node to a glthread */
-void glthread_add_node(glthread_t *list, glthread_node_t *node);
+void glthread_add_node_at_head(glthread_t *list, glthread_node_t *node);
 
 /* removes a node from a glthread */
 void glthread_remove_node(glthread_t *list, glthread_node_t *node);
@@ -32,10 +31,13 @@ void glthread_remove_node(glthread_t *list, glthread_node_t *node);
 /* deletes the entire glthread */
 void glthread_delete(glthread_t *list);
 
+/* inserting a node into a priority queue */
+void glthread_priority_insert(glthread_t *list, glthread_node_t *glthread, int8_t (*comp_fn)(void *, void *), size_t offset);
+
 #define GLTHREAD_OFFSETOF(struct_type, field_name) (size_t)(&((struct_type *)NULL)->field_name)
 
-#define GLTHREAD_BASEOF(glthread_node, struct_type, field_name)                                                        \
-    (struct_type *)((uint8_t *)glthread_node - (GLTHREAD_OFFSETOF(struct_type, field_name)))
+#define GLTHREAD_BASEOF(glthread_node, offset)                                                        \
+    (void *)((uint8_t *)glthread_node - offset)
 
 #define GLTHREAD_ITERATE_BEGIN(list_ptr, node)                                                                         \
     {                                                                                                                  \

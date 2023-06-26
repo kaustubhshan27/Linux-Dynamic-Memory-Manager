@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/mman.h> /* for mmap() and munmap() */
 #include <unistd.h>   /* for sysconf(_SC_PAGESIZE) */
+#include "glthreads.h"
 
 typedef enum
 {
@@ -20,7 +21,10 @@ typedef struct meta_block
     uint32_t data_block_size;
     struct meta_block *prev;
     struct meta_block *next;
+    /* offset of a metablock from the start of a data VM page */
     uint32_t offset;
+    /* node to maintain a priority queue of free data blocks */
+    glthread_node_t glue_node;
 } meta_block_t;
 
 #define MM_BLOCK_OFFSETOF(struct_type, field_name) (size_t)(&((struct_type *)NULL)->field_name)
@@ -85,6 +89,7 @@ typedef struct struct_record
     char struct_name[MM_MAX_STRUCT_NAME_SIZE];
     size_t size;
     struct vm_page_for_data *first_page;
+    glthread_t free_block_priority_list;
 } struct_record_t;
 
 typedef struct vm_page_for_struct_records
