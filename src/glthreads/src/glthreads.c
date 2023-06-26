@@ -7,7 +7,7 @@ static bool _glthread_check_empty(glthread_t *list)
 
 static void _glthread_insert_node(glthread_node_t *current_node, glthread_node_t *new_node)
 {
-    if(current_node->prev != NULL)
+    if (current_node->prev != NULL)
     {
         current_node->prev->next = new_node;
         new_node->prev = current_node->prev;
@@ -77,7 +77,8 @@ void glthread_delete(glthread_t *list)
     GLTHREAD_ITERATE_END;
 }
 
-void glthread_priority_insert(glthread_t *list, glthread_node_t *gl_node, int8_t (*comp_fn)(void *, void *), size_t offset)
+void glthread_priority_insert(glthread_t *list, glthread_node_t *gl_node, int8_t (*comp_fn)(void *, void *),
+                              size_t offset)
 {
     glthread_init_node(gl_node);
 
@@ -91,8 +92,7 @@ void glthread_priority_insert(glthread_t *list, glthread_node_t *gl_node, int8_t
 
         GLTHREAD_ITERATE_BEGIN(list, curr)
         {
-            if (comp_fn(GLTHREAD_BASEOF(gl_node, offset),
-                    GLTHREAD_BASEOF(curr, offset)) == -1)
+            if (comp_fn(GLTHREAD_BASEOF(gl_node, offset), GLTHREAD_BASEOF(curr, offset)) == -1)
             {
                 _glthread_insert_node(curr, gl_node);
                 return;

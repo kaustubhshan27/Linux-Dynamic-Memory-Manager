@@ -133,29 +133,37 @@ static void _mm_delete_and_free_data_vm_page(vm_page_for_data_t *data_vm_page)
     _mm_release_vm_page((void *)data_vm_page, 1);
 }
 
-static int8_t _mm_free_block_comparison(void *meta_block_A, void *meta_block_B) {
+static int8_t _mm_free_block_comparison(void *meta_block_A, void *meta_block_B)
+{
     meta_block_t *meta_block_A_ptr = (meta_block_t *)meta_block_A;
     meta_block_t *meta_block_B_ptr = (meta_block_t *)meta_block_B;
-    
+
     assert((meta_block_A_ptr->is_free == MM_FREE) && (meta_block_B_ptr->is_free == MM_FREE));
 
-    if(meta_block_A_ptr->data_block_size > meta_block_B_ptr->data_block_size) {
+    if (meta_block_A_ptr->data_block_size > meta_block_B_ptr->data_block_size)
+    {
         return -1;
-    } else if(meta_block_A_ptr->data_block_size < meta_block_B_ptr->data_block_size) {
+    }
+    else if (meta_block_A_ptr->data_block_size < meta_block_B_ptr->data_block_size)
+    {
         return 1;
     }
 
     return 0;
 }
 
-static void _mm_add_free_data_block_meta_info(struct_record_t *record, meta_block_t *free_meta_block) {
+static void _mm_add_free_data_block_meta_info(struct_record_t *record, meta_block_t *free_meta_block)
+{
     assert(free_meta_block->is_free == MM_FREE);
 
-    glthread_priority_insert(&record->free_block_priority_list, &free_meta_block->glue_node, _mm_free_block_comparison, MM_BLOCK_OFFSETOF(meta_block_t, glue_node));
+    glthread_priority_insert(&record->free_block_priority_list, &free_meta_block->glue_node, _mm_free_block_comparison,
+                             MM_BLOCK_OFFSETOF(meta_block_t, glue_node));
 }
 
-static meta_block_t *_mm_get_largest_free_data_block(struct_record_t *record) {
-    return (meta_block_t *)(GLTHREAD_BASEOF(record->free_block_priority_list.head, MM_BLOCK_OFFSETOF(meta_block_t, glue_node)));
+static meta_block_t *_mm_get_largest_free_data_block(struct_record_t *record)
+{
+    return (meta_block_t *)(GLTHREAD_BASEOF(record->free_block_priority_list.head,
+                                            MM_BLOCK_OFFSETOF(meta_block_t, glue_node)));
 }
 
 void mm_init(void)

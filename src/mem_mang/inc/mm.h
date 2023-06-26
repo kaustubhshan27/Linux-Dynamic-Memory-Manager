@@ -1,13 +1,13 @@
 #ifndef _MEM_MANG_
 #define _MEM_MANG_
 
+#include "glthreads.h"
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h> /* for mmap() and munmap() */
 #include <unistd.h>   /* for sysconf(_SC_PAGESIZE) */
-#include "glthreads.h"
 
 typedef enum
 {

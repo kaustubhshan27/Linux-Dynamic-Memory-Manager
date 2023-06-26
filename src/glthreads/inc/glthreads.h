@@ -32,12 +32,12 @@ void glthread_remove_node(glthread_t *list, glthread_node_t *node);
 void glthread_delete(glthread_t *list);
 
 /* inserting a node into a priority queue */
-void glthread_priority_insert(glthread_t *list, glthread_node_t *glthread, int8_t (*comp_fn)(void *, void *), size_t offset);
+void glthread_priority_insert(glthread_t *list, glthread_node_t *glthread, int8_t (*comp_fn)(void *, void *),
+                              size_t offset);
 
 #define GLTHREAD_OFFSETOF(struct_type, field_name) (size_t)(&((struct_type *)NULL)->field_name)
 
-#define GLTHREAD_BASEOF(glthread_node, offset)                                                        \
-    (void *)((uint8_t *)glthread_node - offset)
+#define GLTHREAD_BASEOF(glthread_node, offset) (void *)((uint8_t *)glthread_node - offset)
 
 #define GLTHREAD_ITERATE_BEGIN(list_ptr, node)                                                                         \
     {                                                                                                                  \
