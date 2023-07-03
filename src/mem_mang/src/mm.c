@@ -140,7 +140,7 @@ static vm_page_for_data_t *mm_allocate_data_vm_page(struct_record_t *record)
 {
     vm_page_for_data_t *data_vm_page = (vm_page_for_data_t *)_mm_request_vm_page(1);
 
-    MARK_DATA_VM_PAGE_FREE(data_vm_page);
+    MM_MARK_DATA_VM_PAGE_FREE(data_vm_page);
 
     data_vm_page->meta_block_info.data_block_size = _mm_max_vm_page_memory_available(1);
     data_vm_page->meta_block_info.offset = MM_BLOCK_OFFSETOF(vm_page_for_data_t, meta_block_info);
@@ -263,6 +263,137 @@ static meta_block_t *_mm_get_largest_free_data_block(struct_record_t *record)
 }
 
 /**
+ * @brief Binds meta blocks after splitting.
+ *
+ * This function binds meta blocks after splitting. It updates the next and prev pointers of the
+ * allocated meta block and the free meta block to maintain the correct linkage. If the allocated
+ * meta block has a next block, it updates the next block's prev pointer to point to the free meta
+ * block. Finally, it updates the next and prev pointers of the allocated and free meta blocks.
+ *
+ * @param allocated_meta_block Pointer to the allocated meta block.
+ * @param free_meta_block Pointer to the free meta block.
+ */
+static void _mm_bind_blocks_after_splitting(meta_block_t *allocated_meta_block, meta_block_t *free_meta_block)
+{
+    free_meta_block->next = allocated_meta_block->next;
+    free_meta_block->prev = allocated_meta_block;
+    if (allocated_meta_block->next)
+    {
+        allocated_meta_block->next->prev = free_meta_block;
+    }
+    allocated_meta_block->next = free_meta_block;
+}
+
+/**
+ * @brief Splits a free data block for allocation.
+ *
+ * This function splits a free data block for allocation. It first checks if the meta block is free,
+ * and if not, it asserts an error. It then checks if the requested size exceeds the available size
+ * in the data block, and if so, returns false to indicate that the allocation cannot be done. If the
+ * requested size can be accommodated, the function splits the free data block based on the remaining size.
+ * There are four possible cases: no splitting, partial splitting with soft internal fragmentation, partial
+ * splitting with hard internal fragmentation, and full splitting. In each case, the function updates the
+ * meta block information, adds the free meta block to the meta block list, and binds the blocks after splitting.
+ * Finally, it returns true to indicate successful splitting and allocation.
+ *
+ * @param record Pointer to the structure record.
+ * @param meta_block_info Pointer to the meta block information.
+ * @param req_size The requested size of the data block to allocate.
+ * @return True if the splitting and allocation were successful, false otherwise.
+ */
+static bool _mm_split_free_data_block_for_allocation(struct_record_t *record, meta_block_t *meta_block_info,
+                                                     uint32_t req_size)
+{
+    assert(meta_block_info->is_free == MM_FREE);
+
+    meta_block_t *next_meta_block_info = NULL;
+
+    /* memory allocation request cannot be done as requested size is greater than available size in the data block */
+    if (meta_block_info->data_block_size < req_size)
+    {
+        return false;
+    }
+
+    uint32_t remaining_size = meta_block_info->data_block_size - req_size;
+
+    meta_block_info->is_free = MM_ALLOCATED;
+    meta_block_info->data_block_size = req_size;
+    /* remove the meta block from the priority queue */
+    glthread_remove_node(&record->free_block_priority_list, &meta_block_info->glue_node);
+
+    if (remaining_size == 0) /* case 1: no splitting */
+    {
+        return true;
+    }
+    else if (sizeof(meta_block_t) < remaining_size &&
+             remaining_size <
+                 sizeof(meta_block_t) + record->size) /* case 2: partial splitting [soft internal fragmentation] */
+    {
+        next_meta_block_info = MM_NEXT_META_BLOCK_BY_SIZE(meta_block_info);
+        next_meta_block_info->is_free = MM_FREE;
+        next_meta_block_info->data_block_size = remaining_size - sizeof(meta_block_t);
+        next_meta_block_info->offset =
+            meta_block_info->offset + sizeof(meta_block_t) + meta_block_info->data_block_size;
+        _mm_add_free_data_block_meta_info(record, next_meta_block_info);
+        _mm_bind_blocks_after_splitting(meta_block_info, next_meta_block_info);
+    }
+    else if (remaining_size < sizeof(meta_block_t)) /* case 3: partial splitting [hard internal fragmentation] */
+    {
+        /* no action required */
+    }
+    else /* case 4: full split [same as case 2] */
+    {
+        next_meta_block_info = MM_NEXT_META_BLOCK_BY_SIZE(meta_block_info);
+        next_meta_block_info->is_free = MM_FREE;
+        next_meta_block_info->data_block_size = remaining_size - sizeof(meta_block_t);
+        next_meta_block_info->offset =
+            meta_block_info->offset + sizeof(meta_block_t) + meta_block_info->data_block_size;
+        _mm_add_free_data_block_meta_info(record, next_meta_block_info);
+        _mm_bind_blocks_after_splitting(meta_block_info, next_meta_block_info);
+    }
+
+    return true;
+}
+
+/**
+ * @brief Allocates a free data block for a given structure record.
+ *
+ * This function allocates a free data block for a given structure record. It first checks if there
+ * is a free data block with sufficient size in the record. If not, it adds a new page for the record
+ * and allocates memory from the free data block of the newly added VM data page. If there is a free data
+ * block with sufficient size, it allocates memory from the largest data block in the priority queue.
+ * The function splits the free data block for allocation and returns a pointer to the allocated data
+ * block. If allocation fails, it returns NULL.
+ *
+ * @param record Pointer to the structure record.
+ * @param req_size The requested size of the data block to allocate.
+ * @return A pointer to the allocated meta_block_t data block, or NULL if allocation fails.
+ */
+static meta_block_t *_mm_allocate_free_data_block(struct_record_t *record, uint32_t req_size)
+{
+    vm_page_for_data_t *data_vm_page = NULL;
+
+    meta_block_t *largest_free_meta_block = _mm_get_largest_free_data_block(record);
+    if (largest_free_meta_block == NULL || largest_free_meta_block->data_block_size < req_size)
+    {
+        /* add a new page for this record */
+        data_vm_page = mm_allocate_data_vm_page(record);
+
+        /* allocate memory from the free data block of the newly added VM data page */
+        bool status = _mm_split_free_data_block_for_allocation(record, &data_vm_page->meta_block_info, req_size);
+
+        return (status ? &data_vm_page->meta_block_info : NULL);
+    }
+    else
+    {
+        /* allocate memory from the largest data block from the priority queue */
+        bool status = _mm_split_free_data_block_for_allocation(record, largest_free_meta_block, req_size);
+
+        return (status ? largest_free_meta_block : NULL);
+    }
+}
+
+/**
  * @brief Initializes the memory management system.
  *
  * This function initializes the memory management system by retrieving the system page size
@@ -333,7 +464,7 @@ int8_t mm_register_struct_record(const char *struct_name, size_t size)
                 MM_ITERATE_STRUCT_RECORDS_END;
             }
 
-            if (count == MAX_RECORDS_PER_VM_PAGE)
+            if (count == MM_MAX_RECORDS_PER_VM_PAGE)
             {
                 /* the previous VM page is full, create a new VM page to add this record
                  */
@@ -372,5 +503,48 @@ void mm_print_registered_struct_records(void)
             printf("%s: %ld\n", record->struct_name, record->size);
         }
         MM_ITERATE_STRUCT_RECORDS_END;
+    }
+}
+
+/**
+ * @brief Allocates and initializes memory for a structure array.
+ *
+ * This function allocates and initializes memory for a structure array of the specified size.
+ * It performs checks to ensure that the structure has been registered and that the requested
+ * memory size is within the available memory in a completely free VM data page. It then finds
+ * a suitable data block to satisfy the memory request and initializes it with zeros. Finally,
+ * it returns a pointer to the allocated and initialized memory.
+ *
+ * @param struct_name The name of the structure to allocate memory for.
+ * @param units The number of structure units to allocate.
+ * @return A pointer to the allocated and initialized memory, or NULL if allocation failed or
+ *         the structure is not registered.
+ */
+void *xcalloc(char *struct_name, uint32_t units)
+{
+    /* we cannot allocate memory for a struct that has not been registered */
+    struct_record_t *record = _mm_lookup_struct_record_by_name(struct_name);
+    if (record == NULL)
+    {
+        return NULL;
+    }
+
+    /* we cannot allocate memory that is greater than the memory available in a completely free VM data page */
+    if (units * record->size > _mm_max_vm_page_memory_available(1))
+    {
+        return NULL;
+    }
+
+    /* find a data block that can satisfy the memory request from the application */
+    meta_block_t *free_meta_block = _mm_allocate_free_data_block(record, record->size * units);
+
+    if (free_meta_block)
+    {
+        memset((uint8_t *)(free_meta_block + 1), 0, free_meta_block->data_block_size);
+        return (void *)(free_meta_block + 1);
+    }
+    else
+    {
+        return NULL;
     }
 }

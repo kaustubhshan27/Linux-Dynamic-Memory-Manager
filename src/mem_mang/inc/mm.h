@@ -35,17 +35,10 @@ typedef struct meta_block
 #define MM_NEXT_META_BLOCK(meta_block_ptr) (meta_block_t *)(((meta_block_t *)meta_block_ptr)->next)
 
 #define MM_NEXT_META_BLOCK_BY_SIZE(meta_block_ptr)                                                                     \
-    (meta_block_t *)((uint8_t *)meta_block_ptr + sizeof(meta_block_t) + ((meta_block_t *)meta_block_ptr)->size)
+    (meta_block_t *)((uint8_t *)meta_block_ptr + sizeof(meta_block_t) +                                                \
+                     ((meta_block_t *)meta_block_ptr)->data_block_size)
 
 #define MM_PREV_META_BLOCK(meta_block_ptr) (meta_block_t *)(((meta_block_t *)meta_block_ptr)->prev)
-
-#define MM_BIND_BLOCKS_AFTER_SPLITTING(allocated_meta_block, free_meta_block)                                          \
-    ((meta_block_t *)free_meta_block)->next =                                                                          \
-        ((meta_block_t *)allocated_meta_block)->next((meta_block_t *)free_meta_block)->prev =                          \
-            (meta_block_t *)allocated_meta_block if (((meta_block_t *)free_meta_block)->next)(                         \
-                (meta_block_t *)allocated_meta_block)                                                                  \
-                ->next->prev = (meta_block_t *)free_meta_block((meta_block_t *)allocated_meta_block)->next =           \
-                (meta_block_t *)free_meta_block
 
 typedef struct vm_page_for_data
 {
@@ -56,7 +49,7 @@ typedef struct vm_page_for_data
     uint8_t page_memory[];
 } vm_page_for_data_t;
 
-#define MARK_DATA_VM_PAGE_FREE(vm_page_for_data_ptr)                                                                   \
+#define MM_MARK_DATA_VM_PAGE_FREE(vm_page_for_data_ptr)                                                                \
     ((vm_page_for_data_t *)vm_page_for_data_ptr)->meta_block_info.prev = NULL;                                         \
     ((vm_page_for_data_t *)vm_page_for_data_ptr)->meta_block_info.next = NULL;                                         \
     ((vm_page_for_data_t *)vm_page_for_data_ptr)->meta_block_info.is_free = MM_FREE;
@@ -81,7 +74,8 @@ typedef struct vm_page_for_data
     }                                                                                                                  \
     }
 
-#define MAX_RECORDS_PER_VM_PAGE ((SYSTEM_PAGE_SIZE - sizeof(vm_page_for_struct_records_t *)) / sizeof(struct_record_t))
+#define MM_MAX_RECORDS_PER_VM_PAGE                                                                                     \
+    ((SYSTEM_PAGE_SIZE - sizeof(vm_page_for_struct_records_t *)) / sizeof(struct_record_t))
 
 #define MM_MAX_STRUCT_NAME_SIZE 32
 typedef struct struct_record
@@ -102,7 +96,7 @@ typedef struct vm_page_for_struct_records
 #define MM_ITERATE_STRUCT_RECORDS_BEGIN(record_list_ptr, record)                                                       \
     {                                                                                                                  \
         uint32_t limit = 0;                                                                                            \
-        for (record = (struct_record_t *)record_list_ptr; limit < MAX_RECORDS_PER_VM_PAGE && record->size;             \
+        for (record = (struct_record_t *)record_list_ptr; limit < MM_MAX_RECORDS_PER_VM_PAGE && record->size;          \
              record++, limit++)                                                                                        \
         {
 
