@@ -56,7 +56,7 @@ typedef struct vm_page_for_data
 
 #define MM_ITERATE_DATA_VM_PAGES_BEGIN(struct_record_ptr, data_vm_page_ptr)                                            \
     {                                                                                                                  \
-        for (data_vm_page_ptr = ((vm_page_for_data_t *)struct_record_ptr)->first_vm_data_page;                         \
+        for (data_vm_page_ptr = (vm_page_for_data_t *)((struct_record_t *)struct_record_ptr)->first_page;              \
              data_vm_page_ptr != NULL; data_vm_page_ptr = ((vm_page_for_data_t *)data_vm_page_ptr)->next)              \
         {
 

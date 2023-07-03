@@ -52,7 +52,7 @@ static int8_t _mm_release_vm_page(void *vm_page, uint32_t units)
  * @param struct_name Pointer to the struct name to search for.
  * @return Pointer to the matching struct_record_t object, or NULL if not found.
  */
-static struct_record_t *_mm_lookup_struct_record_by_name(char *struct_name)
+static struct_record_t *_mm_lookup_struct_record_by_name(const char *struct_name)
 {
     for (vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL;
          vm_page_record = vm_page_record->next)
@@ -506,6 +506,61 @@ void mm_print_registered_struct_records(void)
     }
 }
 
+void mm_print_mem_usage(char *struct_name)
+{
+    printf("Page Size = %zd\n", SYSTEM_PAGE_SIZE);
+
+    for (vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL;
+         vm_page_record = vm_page_record->next)
+    {
+        struct_record_t *record = NULL;
+        MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record)
+        {
+            vm_page_for_data_t *data_vm_page_ptr = NULL;
+            if(struct_name != NULL) /* print stats of specified struct */
+            {
+                printf("%s: %ld\n", record->struct_name, record->size);
+                if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0)
+                {
+                    MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
+                    {
+                        meta_block_t *meta_block_ptr = NULL;
+                        uint32_t block_count = 0;
+                        MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_BEGIN(data_vm_page_ptr, meta_block_ptr)
+                        {
+                            printf("\t\t\t%p\tBlock: %d\tStatus: %d\tBlock Size: %d\tOffset: %d\tPrev: %p\tNext: %p\t", (void *)meta_block_ptr, block_count, meta_block_ptr->is_free, meta_block_ptr->data_block_size, meta_block_ptr->offset, (void *)meta_block_ptr->prev, (void *)meta_block_ptr->next);
+                            block_count++;
+                        }MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_END;
+                    }
+                    MM_ITERATE_DATA_VM_PAGES_END;
+                    
+                    return;
+                }
+            }
+            else /* print stats of all registered structs */
+            {
+                MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
+                {
+                    meta_block_t *meta_block_ptr = NULL;
+                    uint32_t block_count = 0;
+                    MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_BEGIN(data_vm_page_ptr, meta_block_ptr)
+                    {
+                        printf("\t\t\t%p\tBlock: %d\tStatus: %d\tBlock Size: %d\tOffset: %d\tPrev: %p\tNext: %p\t", (void *)meta_block_ptr, block_count, meta_block_ptr->is_free, meta_block_ptr->data_block_size, meta_block_ptr->offset, (void *)meta_block_ptr->prev, (void *)meta_block_ptr->next);
+                        block_count++;
+                    }MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_END;
+                }
+                MM_ITERATE_DATA_VM_PAGES_END;
+            }
+        }
+        MM_ITERATE_STRUCT_RECORDS_END;
+    }
+}
+
+void mm_print_block_usage(void)
+{
+
+}
+
 /**
  * @brief Allocates and initializes memory for a structure array.
  *
@@ -520,7 +575,7 @@ void mm_print_registered_struct_records(void)
  * @return A pointer to the allocated and initialized memory, or NULL if allocation failed or
  *         the structure is not registered.
  */
-void *xcalloc(char *struct_name, uint32_t units)
+void *xcalloc(const char *struct_name, uint32_t units)
 {
     /* we cannot allocate memory for a struct that has not been registered */
     struct_record_t *record = _mm_lookup_struct_record_by_name(struct_name);
