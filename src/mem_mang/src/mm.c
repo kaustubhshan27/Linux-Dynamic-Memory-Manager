@@ -513,9 +513,9 @@ void mm_print_registered_struct_records(void)
     }
 }
 
-void mm_print_mem_usage(char *struct_name)
+void mm_print_mem_usage(const char *struct_name)
 {
-    printf("Page Size = %zd\n\n", SYSTEM_PAGE_SIZE);
+    printf("\nPage Size = %zd\n\n", SYSTEM_PAGE_SIZE);
 
     for (vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL;
          vm_page_record = vm_page_record->next)
@@ -523,12 +523,12 @@ void mm_print_mem_usage(char *struct_name)
         struct_record_t *record = NULL;
         MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record)
         {
-            printf("%s: %ld\n", record->struct_name, record->size);
             vm_page_for_data_t *data_vm_page_ptr = NULL;
             if(struct_name != NULL) /* print stats of specified struct */
             {
                 if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0)
                 {
+                    printf("%s: %ld\n", record->struct_name, record->size);
                     MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
                     {
                         meta_block_t *meta_block_ptr = NULL;
@@ -546,6 +546,7 @@ void mm_print_mem_usage(char *struct_name)
             }
             else /* print stats of all registered structs */
             {
+                printf("%s: %ld\n", record->struct_name, record->size);
                 MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
                 {
                     meta_block_t *meta_block_ptr = NULL;
@@ -565,7 +566,38 @@ void mm_print_mem_usage(char *struct_name)
 
 void mm_print_block_usage(void)
 {
-
+    printf("\n");
+    for (vm_page_for_struct_records_t *vm_page_record = vm_page_record_head; vm_page_record != NULL;
+         vm_page_record = vm_page_record->next)
+    {
+        struct_record_t *record = NULL;
+        MM_ITERATE_STRUCT_RECORDS_BEGIN(vm_page_record->struct_record_list, record)
+        {
+            printf("%-20s\t", record->struct_name);
+            vm_page_for_data_t *data_vm_page_ptr = NULL;
+            uint32_t allocated_block_count = 0;
+            uint32_t free_block_count = 0;
+            MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
+            {
+                meta_block_t *meta_block_ptr = NULL;
+                MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_BEGIN(data_vm_page_ptr, meta_block_ptr)
+                {
+                    if(meta_block_ptr->is_free == MM_ALLOCATED)
+                    {
+                        allocated_block_count++;
+                    }
+                    else
+                    {
+                        free_block_count++;
+                    }
+                }
+                MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_END;
+            }
+            MM_ITERATE_DATA_VM_PAGES_END;
+            printf("TBC: %5d\tFBC: %5d\tABC: %5d\tAppMemUsage: %10ld\n", allocated_block_count + free_block_count, free_block_count, allocated_block_count, allocated_block_count * (sizeof(meta_block_t) + record->size));
+        }
+        MM_ITERATE_STRUCT_RECORDS_END;
+    }
 }
 
 /**
