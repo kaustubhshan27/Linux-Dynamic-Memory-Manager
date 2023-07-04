@@ -513,6 +513,17 @@ void mm_print_registered_struct_records(void)
     }
 }
 
+/**
+ * @brief Prints memory usage statistics for registered structure records.
+ *
+ * This function prints memory usage statistics for registered structure records. It first prints the page size.
+ * Then, it iterates through the VM pages and structure records. If a specific struct name is provided, it prints
+ * the statistics for that struct only. Otherwise, it prints the statistics for all registered structs. For each
+ * struct, it iterates through the data VM pages and meta blocks to print detailed information about each block,
+ * including its address, status, size, offset, previous block, and next block.
+ *
+ * @param struct_name Optional. The name of the struct to print statistics for. If NULL, print stats for all registered structs.
+ */
 void mm_print_mem_usage(const char *struct_name)
 {
     printf("\nPage Size = %zd\n\n", SYSTEM_PAGE_SIZE);
@@ -564,6 +575,15 @@ void mm_print_mem_usage(const char *struct_name)
     }
 }
 
+/**
+ * @brief Prints the block usage statistics for all registered structure records.
+ *
+ * This function prints the block usage statistics for all registered structure records. It iterates through
+ * the VM pages and structure records, and for each record, it iterates through the data VM pages and meta blocks
+ * to calculate the number of allocated blocks and free blocks. It also calculates the application memory usage
+ * by multiplying the number of allocated blocks with the size of each block. The statistics are then printed
+ * for each structure record.
+ */
 void mm_print_block_usage(void)
 {
     printf("\n");
