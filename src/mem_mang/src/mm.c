@@ -87,7 +87,7 @@ static void _mm_merge_free_blocks(meta_block_t *first, meta_block_t *second)
 
     first->data_block_size += sizeof(meta_block_t) + second->data_block_size;
     first->next = second->next;
-    if (!second->next)
+    if (second->next != NULL)
     {
         first->next->prev = first;
     }
@@ -401,6 +401,81 @@ static meta_block_t *_mm_allocate_free_data_block(struct_record_t *record, uint3
 }
 
 /**
+ * @brief Calculates the size of hard internal fragmentation between two meta blocks.
+ *
+ * This function calculates the size of hard internal fragmentation between two meta blocks. It takes two meta block
+ * pointers, `first` and `second`, and calculates the size by subtracting the address of the next meta block from the
+ * address of the second meta block. It returns the size of hard internal fragmentation as a `uint32_t` value.
+ *
+ * @param first Pointer to the first meta block.
+ * @param second Pointer to the second meta block.
+ * @return The size of hard internal fragmentation between the two meta blocks.
+ */
+static uint32_t _mm_get_hard_internal_frag_size(meta_block_t *first, meta_block_t *second)
+{
+    meta_block_t *next_meta_block = MM_NEXT_META_BLOCK_BY_SIZE(first);
+    return (uint32_t)((uint8_t *)second - (uint8_t *)next_meta_block);
+}
+
+/**
+ * @brief Frees a data block and performs block merging if possible.
+ *
+ * This function frees a data block specified by the `app_data_meta_block` pointer. It marks the block as free by setting
+ * its `is_free` field to `MM_FREE`. It then checks if the freed block is followed by another free block (`next_meta_block`)
+ * or if it is the last block in the VM page. In case 1, it merges the freed block with the next free block, and in case 2,
+ * it calculates the size of hard internal fragmentation by subtracting the end of the freed block from the end of the VM
+ * page. The function performs block merging with the previous free block (`prev_meta_block`) if applicable.
+ *
+ * After merging, the function checks if the data VM page becomes empty. If it does, the data VM page is deleted and freed.
+ * Finally, the merged meta block is added to the free meta block priority queue.
+ *
+ * @param app_data_meta_block Pointer to the meta block of the data block to be freed.
+ */
+static void _mm_free_data_block(meta_block_t *app_data_meta_block)
+{
+    vm_page_for_data_t *hosting_data_vm_page = (vm_page_for_data_t *)MM_GET_PAGE_FROM_META_BLOCK(app_data_meta_block);
+
+    app_data_meta_block->is_free = MM_FREE;
+
+    meta_block_t *next_meta_block = MM_NEXT_META_BLOCK(app_data_meta_block);
+    if(next_meta_block != NULL)     /* case 1: if the meta block is not the last block in the VM page, also handling hard IF memory if present */
+    {
+        app_data_meta_block->data_block_size += _mm_get_hard_internal_frag_size(app_data_meta_block, next_meta_block);
+    }
+    else    /* case 2: if the meta block is the last block in the VM page, also handling hard IF memory if present */
+    {
+        uint8_t *data_vm_page_end = (uint8_t *)((uint8_t *)hosting_data_vm_page + SYSTEM_PAGE_SIZE);
+        uint8_t *app_data_block_end = (uint8_t *)app_data_meta_block + sizeof(meta_block_t) + app_data_meta_block->data_block_size;
+        app_data_meta_block->data_block_size += (uint32_t)((uintptr_t)((void *)data_vm_page_end) - (uintptr_t)((void *)app_data_block_end));
+    }
+
+    meta_block_t *final_merged_meta_block = app_data_meta_block;
+
+    /* perform block merging */
+    if(next_meta_block != NULL && next_meta_block->is_free == MM_FREE)
+    {
+        _mm_merge_free_blocks(app_data_meta_block, next_meta_block);
+    }
+
+    meta_block_t *prev_meta_block = MM_PREV_META_BLOCK(app_data_meta_block);
+    if(prev_meta_block != NULL && prev_meta_block->is_free == MM_FREE)
+    {
+        _mm_merge_free_blocks(prev_meta_block, app_data_meta_block);
+        final_merged_meta_block = prev_meta_block;
+    }
+
+    /* check if the data VM page empty */
+    if(_mm_is_data_vm_page_empty(hosting_data_vm_page) == MM_FREE)
+    {
+        _mm_delete_and_free_data_vm_page(hosting_data_vm_page);
+        return;
+    }
+
+    /* add the final meta block to the free meta block PQ */
+    _mm_add_free_data_block_meta_info(hosting_data_vm_page->record, final_merged_meta_block);
+}
+
+/**
  * @brief Initializes the memory management system.
  *
  * This function initializes the memory management system by retrieving the system page size
@@ -665,4 +740,25 @@ void *xcalloc(const char *struct_name, uint32_t units)
     {
         return NULL;
     }
+}
+
+/**
+ * @brief Frees a dynamically allocated memory block.
+ *
+ * The `xfree` function frees the memory block pointed to by `app_data`. It calculates the pointer to the meta block
+ * corresponding to the data block by subtracting the size of the meta block from the `app_data` pointer. The function
+ * asserts that the meta block's `is_free` field is already set to `MM_FREE` to ensure that the block is not already freed.
+ *
+ * After the assertion, the function calls `_mm_free_data_block` to perform the actual freeing of the data block,
+ * including block merging and memory management operations.
+ *
+ * @param app_data Pointer to the dynamically allocated memory block to be freed.
+ */
+void xfree(void *app_data)
+{
+    meta_block_t *app_data_meta_block = (meta_block_t *)((uint8_t *)app_data - sizeof(meta_block_t));
+
+    assert(app_data_meta_block->is_free == MM_ALLOCATED);
+
+    _mm_free_data_block(app_data_meta_block);
 }
