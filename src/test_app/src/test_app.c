@@ -21,8 +21,11 @@ int main(int argc, char **argv)
     MM_REG_STRUCT(student_t);
     mm_print_registered_struct_records();
 
-    xcalloc("empt_t", 1);
-    xcalloc("student_t", 1);
+    for(int i = 0; i < 100; i++)
+    {
+        xcalloc("empt_t", 1);
+        xcalloc("student_t", 1);
+    }
 
     mm_print_mem_usage(NULL);
     mm_print_block_usage();

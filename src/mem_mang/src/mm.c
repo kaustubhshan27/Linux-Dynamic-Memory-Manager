@@ -540,10 +540,12 @@ void mm_print_mem_usage(const char *struct_name)
                 if(strncmp(record->struct_name, struct_name, MM_MAX_STRUCT_NAME_SIZE) == 0)
                 {
                     printf("%s: %ld\n", record->struct_name, record->size);
+                    uint32_t page_num = 0;
                     MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
                     {
                         meta_block_t *meta_block_ptr = NULL;
                         uint32_t block_count = 0;
+                        printf("\tPage Number: %d\n", page_num++);
                         MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_BEGIN(data_vm_page_ptr, meta_block_ptr)
                         {
                             printf("\t\t\t%14p\tBlock: %5d\tStatus: %s\tBlock Size: %5d\tOffset: %5d\tPrev: %14p\tNext: %14p\n", (void *)meta_block_ptr, block_count, meta_block_ptr->is_free ? "ALLOCATED" : "F R E E D", meta_block_ptr->data_block_size, meta_block_ptr->offset, (void *)meta_block_ptr->prev, (void *)meta_block_ptr->next);
@@ -558,10 +560,12 @@ void mm_print_mem_usage(const char *struct_name)
             else /* print stats of all registered structs */
             {
                 printf("%s: %ld\n", record->struct_name, record->size);
+                uint32_t page_num = 0;
                 MM_ITERATE_DATA_VM_PAGES_BEGIN(record, data_vm_page_ptr)
                 {
                     meta_block_t *meta_block_ptr = NULL;
                     uint32_t block_count = 0;
+                    printf("\tPage Number: %d\n", page_num++);
                     MM_ITERATE_ALL_BLOCKS_OF_SINGLE_DATA_VM_PAGE_BEGIN(data_vm_page_ptr, meta_block_ptr)
                     {
                         printf("\t\t\t%14p\tBlock: %5d\tStatus: %s\tBlock Size: %5d\tOffset: %5d\tPrev: %14p\tNext: %14p\n", (void *)meta_block_ptr, block_count, meta_block_ptr->is_free ? "ALLOCATED" : "F R E E D", meta_block_ptr->data_block_size, meta_block_ptr->offset, (void *)meta_block_ptr->prev, (void *)meta_block_ptr->next);
