@@ -8,7 +8,7 @@ The project implements its own malloc() and free() calls to allocate and free me
 
 The memory manager uses a linked list of free blocks to track available memory. When xcalloc() is called, the memory manager searches the free list for a block that is large enough to satisfy the request. If a suitable block is found, the block is removed from the free list and returned to the caller. If no suitable block is found, a new block is allocated from the operating system. When xfree() is called, the memory manager adds the freed block to the free list.
 
-The memory manager is based on Slab Allocation and includes features to improve performance and memory utilization, such as block merging and fragmentation avoidance.
+The memory manager includes features to improve performance and memory utilization, such as block merging and fragmentation avoidance.
 
 
 ---
