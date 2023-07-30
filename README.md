@@ -51,7 +51,8 @@ repo
 ```bash
 git clone https://github.com/kaustubhshan27/linux-heap-memory-manager
 cd linux-heap-memory-manager
-make build
+make build_dir
+make all
 ./bins/test_app
 ```
 
