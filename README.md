@@ -23,16 +23,16 @@ repo
 ├── README.md
 └── src
     ├── glthreads
+    │   ├── Makefile
     │   ├── inc
     │   │   └── glthreads.h
-    │   ├── Makefile
     │   └── src
     │       └── glthreads.c
     ├── mem_mang
+    │   ├── Makefile
     │   ├── inc
     │   │   ├── mm.h
     │   │   └── uapi_mm.h
-    │   ├── Makefile
     │   └── src
     │       └── mm.c
     └── test_app
