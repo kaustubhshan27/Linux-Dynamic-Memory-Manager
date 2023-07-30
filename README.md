@@ -46,7 +46,7 @@ repo
 ---
 
 
-### 🎮 Using linux-heap-memory-manager
+## 🎮 Using linux-heap-memory-manager
 
 ```bash
 git clone https://github.com/kaustubhshan27/linux-heap-memory-manager
