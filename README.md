@@ -3,6 +3,16 @@
 ---
 
 
+## 📒 Table of Contents
+- [📍 Overview](#-overview)
+- [📂 Project Structure](#-project-structure)
+- [🎮 Using linux-heap-memory-manager](#-using-linux-heap-memory-manager)
+- [🚀 Demo](#-demo)
+
+
+---
+
+
 ## 📍 Overview
 The project implements its own malloc() and free() calls to allocate and free memory dynamically. 
 
