@@ -6,7 +6,7 @@
 ## 📒 Table of Contents
 - [📍 Overview](#-overview)
 - [📂 Project Structure](#-project-structure)
-- [🎮 Using linux-heap-memory-manager](#-using-linux-heap-memory-manager)
+- [🎮 Using linux-heap-memory-manager](#-using-linux-dynamic-memory-manager)
 - [🚀 Demo](#-demo)
 
 
@@ -56,7 +56,7 @@ repo
 ---
 
 
-## 🎮 Using linux-heap-memory-manager
+## 🎮 Using linux-dynamic-memory-manager
 
 ```bash
 git clone https://github.com/kaustubhshan27/linux-heap-memory-manager
