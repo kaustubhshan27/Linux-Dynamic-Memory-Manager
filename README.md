@@ -6,7 +6,7 @@
 ## 📒 Table of Contents
 - [📍 Overview](#-overview)
 - [📂 Project Structure](#-project-structure)
-- [🎮 Using linux-heap-memory-manager](#-using-linux-dynamic-memory-manager)
+- [🎮 Using linux-dynamic-memory-manager](#-using-linux-dynamic-memory-manager)
 - [🚀 Demo](#-demo)
 
 
